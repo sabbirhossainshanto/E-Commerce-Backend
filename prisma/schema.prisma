@@ -62,15 +62,24 @@ model Product {
   price        Float
   inventory    Int
   categoryId   String
-  vendorId     String
+  discount     Int?
   category     Category       @relation(fields: [categoryId], references: [id])
-  vendor       Shop           @relation(fields: [vendorId], references: [id])
-  reviews      Review[]
+  shopId       String
+  shop         Shop           @relation(fields: [shopId], references: [id])
   images       String[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-  OrderProduct OrderProduct[]
-  CartProduct  CartProduct[]
+  reviews      Review[]
+  orderProduct OrderProduct[]
+  cartProduct  CartProduct[]
+}
+
+model Coupon {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  discount  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
