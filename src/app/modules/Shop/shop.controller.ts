@@ -2,10 +2,12 @@ import httpStatus from "http-status";
 import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 import { shopService } from "./shop.service";
-import { IFile } from "../../interfaces/file";
 
 const createShop = catchAsync(async (req, res) => {
-  const result = await shopService.createShop(req.file as IFile, req.body);
+  const result = await shopService.createShop(
+    req.file as Express.Multer.File,
+    req.body
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -38,7 +40,7 @@ const getMyShop = catchAsync(async (req, res) => {
 const updateMyShop = catchAsync(async (req, res) => {
   const result = await shopService.updateMyShop(
     req.user,
-    req.file as IFile,
+    req.file as Express.Multer.File,
     req.body
   );
 

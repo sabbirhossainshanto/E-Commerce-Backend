@@ -6,7 +6,7 @@ import { IFile } from "../../interfaces/file";
 import { fileUploader } from "../../../utils/fileUploader";
 import { IUser } from "../User/user.interface";
 
-const createShop = async (file: IFile, payload: Shop) => {
+const createShop = async (file: Express.Multer.File, payload: Shop) => {
   const user = await prisma.user.findUnique({
     where: {
       id: payload.userId,
@@ -59,7 +59,7 @@ const getMyShop = async (user: IUser) => {
 
 const updateMyShop = async (
   user: IUser,
-  file: IFile,
+  file: Express.Multer.File,
   payload: Partial<Shop>
 ) => {
   const userData = await prisma.user.findUnique({

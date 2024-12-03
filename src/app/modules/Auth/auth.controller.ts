@@ -3,6 +3,25 @@ import { authService } from "./auth.service";
 import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 
+const createUser = catchAsync(async (req, res) => {
+  const { password, user } = req.body;
+  const { accessToken, refreshToken } = await authService.createUser(
+    req.file as Express.Multer.File,
+    user,
+    password
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User created successfully",
+    data: {
+      accessToken,
+      refreshToken,
+    },
+  });
+});
+
 const loginUser = catchAsync(async (req, res) => {
   const result = await authService.loginUser(req.body);
   const { accessToken, refreshToken } = result;
@@ -72,4 +91,5 @@ export const authController = {
   changePassword,
   forgotPassword,
   resetPassword,
+  createUser,
 };

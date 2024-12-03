@@ -1,42 +1,75 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
-import { IFile } from "../app/interfaces/file";
+import { Readable } from "stream";
 
-// Configuration
 cloudinary.config({
   cloud_name: "daar91zv4",
   api_key: "573799455418682",
   api_secret: "gzo1SMIvFxeau3-bPvE-RQDxVQQ",
 });
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(process.cwd(), "uploads"));
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+const uploadMultiple = multer({ storage }).array("files", 10);
 
-const upload = multer({ storage: storage });
+const uploadToCloudinary = (
+  file: Express.Multer.File
+): Promise<UploadApiResponse> => {
+  return new Promise((resolve, reject) => {
+    const filename = `${file.originalname.split(".")[0]}-${Date.now()}`;
 
-const uploadToCloudinary = async (file: IFile): Promise<UploadApiResponse> => {
-  // Upload an image
-  const uploadResult = await cloudinary.uploader
-    .upload(file.path, {
-      public_id: file.originalname,
-    })
-    .catch((error) => {
-      fs.unlinkSync(file.path);
-      return error;
-    });
-  fs.unlinkSync(file.path);
-  return uploadResult;
+    const stream = cloudinary.uploader.upload_stream(
+      { public_id: filename },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result!);
+        }
+      }
+    );
+
+    const readableStream = new Readable();
+    readableStream.push(file.buffer);
+    readableStream.push(null);
+    readableStream.pipe(stream);
+  });
+};
+
+const uploadMultipleToCloudinary = (
+  files: Express.Multer.File | Express.Multer.File[]
+): Promise<string[]> => {
+  const fileArray = Array.isArray(files) ? files : [files];
+
+  const uploadPromises = fileArray.map(
+    (file) =>
+      new Promise<string>((resolve, reject) => {
+        const filename = `${file.originalname.split(".")[0]}-${Date.now()}`;
+
+        const stream = cloudinary.uploader.upload_stream(
+          { public_id: filename },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result!.secure_url);
+            }
+          }
+        );
+
+        const readableStream = new Readable();
+        readableStream.push(file.buffer);
+        readableStream.push(null);
+        readableStream.pipe(stream);
+      })
+  );
+
+  return Promise.all(uploadPromises);
 };
 
 export const fileUploader = {
   upload,
+  uploadMultiple,
   uploadToCloudinary,
+  uploadMultipleToCloudinary,
 };

@@ -2,23 +2,6 @@ import httpStatus from "http-status";
 import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 import { userService } from "./user.service";
-import { IFile } from "../../interfaces/file";
-
-const createUser = catchAsync(async (req, res) => {
-  const { password, user } = req.body;
-  const result = await userService.createUser(
-    req.file as IFile,
-    user,
-    password
-  );
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "User created successfully",
-    data: result,
-  });
-});
 
 const updateUserRoleStatus = catchAsync(async (req, res) => {
   const { userId } = req.params;
@@ -32,7 +15,7 @@ const updateUserRoleStatus = catchAsync(async (req, res) => {
   });
 });
 const getAllUser = catchAsync(async (req, res) => {
-  const result = await userService.getAllUser();
+  const result = await userService.getAllUser(req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -43,7 +26,6 @@ const getAllUser = catchAsync(async (req, res) => {
 });
 
 export const userController = {
-  createUser,
   updateUserRoleStatus,
   getAllUser,
 };

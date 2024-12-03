@@ -6,6 +6,65 @@ import prisma from "../../helpers/prisma";
 import { jwtHelper } from "../../helpers/jwtHelper";
 import config from "../../config";
 import sendEmail from "../../../utils/sendEmail";
+import { User } from "@prisma/client";
+import { fileUploader } from "../../../utils/fileUploader";
+
+const createUser = async (
+  file: Express.Multer.File,
+  payload: User,
+  password: string
+) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+    },
+  });
+  if (user) {
+    throw new AppError(httpStatus.BAD_REQUEST, "This user is already exist");
+  }
+  if (file) {
+    const { secure_url } = await fileUploader.uploadToCloudinary(file);
+    payload.profilePhoto = secure_url;
+  }
+  const hashedPassword = await bcrypt.hash(
+    password,
+    Number(config.bcrypt_salt_round)
+  );
+  const userData: User = {
+    ...payload,
+    password: hashedPassword,
+  };
+  const result = await prisma.user.create({
+    data: userData,
+  });
+  const accessToken = jwtHelper.generateToken(
+    {
+      email: result.email,
+      role: result.role,
+      profilePhoto: result.profilePhoto,
+      name: result.name,
+      id: result.id,
+    },
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in as string
+  );
+  const refreshToken = jwtHelper.generateToken(
+    {
+      email: result.email,
+      role: result.role,
+      profilePhoto: result.profilePhoto,
+      name: result.name,
+      id: result.id,
+    },
+    config.jwt_refresh_secret as string,
+    config.jwt_refresh_expires_in as string
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+  };
+};
 
 const loginUser = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -23,12 +82,24 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new Error("Password incorrect!");
   }
   const accessToken = jwtHelper.generateToken(
-    { email: user.email, role: user.role },
+    {
+      email: user.email,
+      role: user.role,
+      profilePhoto: user.profilePhoto,
+      name: user.name,
+      id: user.id,
+    },
     config.jwt_access_secret as string,
     config.jwt_access_expires_in as string
   );
   const refreshToken = jwtHelper.generateToken(
-    { email: user.email, role: user.role },
+    {
+      email: user.email,
+      role: user.role,
+      profilePhoto: user.profilePhoto,
+      name: user.name,
+      id: user.id,
+    },
     config.jwt_refresh_secret as string,
     config.jwt_refresh_expires_in as string
   );
@@ -160,4 +231,5 @@ export const authService = {
   changePassword,
   forgotPassword,
   resetPassword,
+  createUser,
 };

@@ -20,7 +20,15 @@ router.post(
 
 router.get("/", auth(Role.ADMIN), shopController.getAllShop);
 router.get("/my-shop", auth(Role.VENDOR), shopController.getMyShop);
-router.patch("/my-shop", auth(Role.VENDOR), shopController.updateMyShop);
+
+router.patch(
+  "/my-shop",
+  auth(Role.VENDOR),
+  fileUploader.upload.single("file"),
+  parseRequest,
+  validateRequest(shopValidation.updateShop),
+  shopController.updateMyShop
+);
 router.delete("/my-shop", auth(Role.VENDOR), shopController.deleteMyShop);
 
 export const shopRoutes = router;

@@ -2,11 +2,10 @@ import httpStatus from "http-status";
 import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 import { productService } from "./product.service";
-import { IFile } from "../../interfaces/file";
 
 const createProduct = catchAsync(async (req, res) => {
   const result = await productService.createProduct(
-    req.file as IFile,
+    req.files as Express.Multer.File[],
     req.body
   );
 
@@ -19,6 +18,17 @@ const createProduct = catchAsync(async (req, res) => {
 });
 const getAllProduct = catchAsync(async (req, res) => {
   const result = await productService.getAllProduct();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Product are retrieved successfully",
+    data: result,
+  });
+});
+
+const getMyProducts = catchAsync(async (req, res) => {
+  const result = await productService.getMyProducts(req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -42,7 +52,7 @@ const updateSingleProduct = catchAsync(async (req, res) => {
   const { productId } = req.params;
   const result = await productService.updateSingleProduct(
     productId,
-    req.file as IFile,
+    req.files as Express.Multer.File[],
     req.body
   );
 
@@ -71,4 +81,5 @@ export const productController = {
   getSingleProduct,
   updateSingleProduct,
   deleteSingleProduct,
+  getMyProducts,
 };

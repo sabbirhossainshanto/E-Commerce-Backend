@@ -12,19 +12,20 @@ const router = Router();
 router.post(
   "/create-product",
   auth(Role.VENDOR),
-  fileUploader.upload.single("file"),
+  fileUploader.uploadMultiple,
   parseRequest,
   validateRequest(productValidation.createProduct),
   productController.createProduct
 );
 
 router.get("/", productController.getAllProduct);
+router.get("/my-products", auth(Role.VENDOR), productController.getMyProducts);
 router.get("/:productId", productController.getSingleProduct);
 
 router.patch(
   "/:productId",
   auth(Role.VENDOR),
-  fileUploader.upload.single("file"),
+  fileUploader.uploadMultiple,
   parseRequest,
   validateRequest(productValidation.updateProduct),
   productController.updateSingleProduct
