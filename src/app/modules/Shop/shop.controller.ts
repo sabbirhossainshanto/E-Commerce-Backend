@@ -5,6 +5,7 @@ import { shopService } from "./shop.service";
 
 const createShop = catchAsync(async (req, res) => {
   const result = await shopService.createShop(
+    req.user,
     req.file as Express.Multer.File,
     req.body
   );

@@ -32,7 +32,7 @@ router.patch(
 );
 router.delete(
   "/:productId",
-  auth(Role.VENDOR),
+  auth(Role.VENDOR, Role.ADMIN),
   productController.deleteSingleProduct
 );
 

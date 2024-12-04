@@ -1,14 +1,27 @@
-import { Product } from "@prisma/client";
+import { Prisma, Product } from "@prisma/client";
 import prisma from "../../helpers/prisma";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 import { fileUploader } from "../../../utils/fileUploader";
 import { IUser } from "../User/user.interface";
+import { IProductQuery } from "./product.interface";
+import { paginationHelper } from "../../helpers/paginationHelper";
+import { productSearchableFields } from "./product.const";
 
 const createProduct = async (
+  user: IUser,
   files: Express.Multer.File[],
   payload: Product
 ) => {
+  const userData = await prisma.user.findUnique({
+    where: {
+      email: user?.email,
+    },
+  });
+  if (!userData) {
+    throw new AppError(httpStatus.NOT_FOUND, "User is not found");
+  }
+
   const category = await prisma.category.findUnique({
     where: {
       id: payload.categoryId,
@@ -17,14 +30,17 @@ const createProduct = async (
   if (!category) {
     throw new AppError(httpStatus.NOT_FOUND, "Category is not found");
   }
+
   const shop = await prisma.shop.findUnique({
     where: {
-      id: payload.shopId,
+      userId: userData?.id,
     },
   });
   if (!shop) {
     throw new AppError(httpStatus.NOT_FOUND, "Shop is not found");
   }
+
+  payload.shopId = shop.id;
 
   if (files?.length > 0) {
     const imageUrls = await fileUploader.uploadMultipleToCloudinary(files);
@@ -38,8 +54,72 @@ const createProduct = async (
   return result;
 };
 
-const getAllProduct = async () => {
-  return await prisma.product.findMany();
+const getAllProduct = async (query: IProductQuery, options: any) => {
+  const { limit, skip, sortBy, sortOrder, page } =
+    paginationHelper.calculatePagination(options);
+  const { searchTerm, category, ...restQueries } = query;
+  const andCondition: Prisma.ProductWhereInput[] = [];
+
+  if (searchTerm) {
+    andCondition.push({
+      OR: productSearchableFields?.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (category) {
+    andCondition.push({
+      category: {
+        name: {
+          contains: category,
+        },
+      },
+    });
+  }
+
+  if (Object.keys(restQueries).length > 0) {
+    andCondition.push({
+      AND: Object.keys(restQueries).map((key) => ({
+        [key]: {
+          equals: (restQueries as any)[key],
+        },
+      })),
+    });
+  }
+
+  const whereCondition: Prisma.ProductWhereInput = { AND: andCondition };
+  const data = await prisma.product.findMany({
+    where: whereCondition,
+    skip,
+    take: limit,
+    orderBy:
+      sortBy && sortOrder
+        ? {
+            [sortBy]: sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
+    include: {
+      category: true,
+      shop: true,
+    },
+  });
+  const total = await prisma.product.count({
+    where: whereCondition,
+  });
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data,
+  };
 };
 const getMyProducts = async (user: IUser) => {
   const userData = await prisma.user.findUnique({

@@ -4,7 +4,10 @@ import sendResponse from "../../../utils/sendResponse";
 import { categoryService } from "./category.service";
 
 const createCategory = catchAsync(async (req, res) => {
-  const result = await categoryService.createCategory(req.body);
+  const result = await categoryService.createCategory(
+    req.file as Express.Multer.File,
+    req.body
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -38,6 +41,7 @@ const updateSingleCategory = catchAsync(async (req, res) => {
   const { categoryId } = req.params;
   const result = await categoryService.updateSingleCategory(
     categoryId,
+    req.file as Express.Multer.File,
     req.body
   );
 

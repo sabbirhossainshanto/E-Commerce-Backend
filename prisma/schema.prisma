@@ -8,22 +8,21 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  name         String
-  email        String     @unique
-  password     String
-  role         Role       @default(USER)
-  profilePhoto String?
-  status       UserStatus @default(ACTIVE)
-  isDeleted    Boolean    @default(false)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  Cart            Cart[]
+  id              String             @id @default(uuid())
+  name            String
+  email           String             @unique
+  password        String
+  role            Role               @default(USER)
+  profilePhoto    String?
+  status          UserStatus         @default(ACTIVE)
+  isDeleted       Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   vendor          Shop?
   orders          Order[]
   reviews         Review[]
   followedVendors UserVendorFollow[]
+  cart            Cart[]
 }
 
 model Shop {
@@ -71,7 +70,7 @@ model Product {
   updatedAt    DateTime       @updatedAt
   reviews      Review[]
   orderProduct OrderProduct[]
-  cartProduct  CartProduct[]
+  cart         Cart[]
 }
 
 model Coupon {
@@ -85,6 +84,7 @@ model Coupon {
 model Category {
   id        String    @id @default(uuid())
   name      String    @unique
+  image     String?
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -127,21 +127,12 @@ model Review {
 }
 
 model Cart {
-  id        String        @id @default(uuid())
-  userId    String
-  user      User          @relation(fields: [userId], references: [id])
-  cartItems CartProduct[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-}
-
-model CartProduct {
   id        String   @id @default(uuid())
-  cartId    String
-  productId String
   quantity  Int
-  cart      Cart     @relation(fields: [cartId], references: [id])
+  productId String   @unique
   product   Product  @relation(fields: [productId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

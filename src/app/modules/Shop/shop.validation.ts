@@ -6,7 +6,6 @@ const createShop = z.object({
     shopDetails: z
       .string({ required_error: "Shop details is required" })
       .optional(),
-    userId: z.string({ required_error: "User id is required" }),
   }),
 });
 const updateShop = z.object({

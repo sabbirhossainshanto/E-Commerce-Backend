@@ -2,29 +2,33 @@ import { Shop, UserStatus } from "@prisma/client";
 import prisma from "../../helpers/prisma";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
-import { IFile } from "../../interfaces/file";
 import { fileUploader } from "../../../utils/fileUploader";
 import { IUser } from "../User/user.interface";
 
-const createShop = async (file: Express.Multer.File, payload: Shop) => {
-  const user = await prisma.user.findUnique({
+const createShop = async (
+  user: IUser,
+  file: Express.Multer.File,
+  payload: Shop
+) => {
+  const userData = await prisma.user.findUnique({
     where: {
-      id: payload.userId,
+      email: user?.email,
       isDeleted: false,
       status: UserStatus.ACTIVE,
     },
   });
-  if (!user) {
+  if (!userData) {
     throw new AppError(httpStatus.NOT_FOUND, "User is not found");
   }
   const shop = await prisma.shop.findUnique({
     where: {
-      userId: payload.userId,
+      userId: userData?.id,
     },
   });
   if (shop) {
     throw new AppError(httpStatus.BAD_REQUEST, "Already you have a shop");
   }
+  payload.userId = userData?.id;
 
   if (file) {
     const { secure_url } = await fileUploader.uploadToCloudinary(file);

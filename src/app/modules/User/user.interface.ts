@@ -5,6 +5,9 @@ export interface IUser {
   role: Role;
   iat: number;
   exp: number;
+  profilePhoto: string;
+  name: string;
+  id: string;
 }
 
 export interface IUserRoleStatus {

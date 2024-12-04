@@ -8,7 +8,6 @@ const createProduct = z.object({
     inventory: z.number({ required_error: "Inventory is required" }),
     categoryId: z.string({ required_error: "Category id is required" }),
     discount: z.number({ required_error: "Discount is required" }).optional(),
-    shopId: z.string({ required_error: "Shop id is required" }),
   }),
 });
 
@@ -24,7 +23,6 @@ const updateProduct = z.object({
       .string({ required_error: "Category id is required" })
       .optional(),
     discount: z.number({ required_error: "Discount is required" }).optional(),
-    shopId: z.string({ required_error: "Shop id is required" }).optional(),
   }),
 });
 
