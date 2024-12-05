@@ -3,6 +3,7 @@ import { IUser } from "../User/user.interface";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 import { initiatePayment } from "../payment/payment.utils";
+import { OrderStatus } from "@prisma/client";
 
 const createOrder = async (
   user: IUser,
@@ -85,6 +86,17 @@ const createOrder = async (
   return paymentSession;
 };
 
+const getAllOrders = async (user: IUser) => {
+  const orders = await prisma.order.findMany({
+    include: {
+      product: true,
+      shop: true,
+    },
+  });
+
+  return orders;
+};
+
 const getMyOrders = async (user: IUser) => {
   const orders = await prisma.order.findMany({
     where: {
@@ -115,9 +127,31 @@ const deleteMyOrders = async (id: string) => {
 
   return orders;
 };
+const updateOrderStatus = async (
+  id: string,
+  payload: { status: OrderStatus }
+) => {
+  const isOrderExist = await prisma.order.findUnique({
+    where: { id },
+  });
+
+  if (!isOrderExist) {
+    throw new AppError(httpStatus.NOT_FOUND, "Order is not found");
+  }
+  const orders = await prisma.order.update({
+    where: {
+      id,
+    },
+    data: payload,
+  });
+
+  return orders;
+};
 
 export const orderService = {
   createOrder,
   getMyOrders,
   deleteMyOrders,
+  getAllOrders,
+  updateOrderStatus,
 };

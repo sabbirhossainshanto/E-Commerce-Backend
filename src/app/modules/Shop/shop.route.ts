@@ -19,7 +19,7 @@ router.post(
 );
 
 router.get("/", auth(Role.ADMIN), shopController.getAllShop);
-router.get("/:shopId", shopController.getSingleShop);
+router.get("/single-shop/:shopId", shopController.getSingleShop);
 router.get("/my-shop", auth(Role.VENDOR), shopController.getMyShop);
 
 router.patch(

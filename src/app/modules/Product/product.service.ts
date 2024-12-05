@@ -67,6 +67,41 @@ const getAllProduct = async (query: IProductQuery, options: any) => {
   const { searchTerm, category, ...restQueries } = query;
   const andCondition: Prisma.ProductWhereInput[] = [];
 
+  if (searchTerm == "recentViewedProduct") {
+    const data = await prisma.product.findMany({
+      where: {
+        view: {
+          gt: 0,
+        },
+      },
+      orderBy: {
+        view: "desc",
+      },
+      take: 10,
+      include: {
+        category: true,
+        shop: true,
+        reviews: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    const total = await prisma.product.count({
+      take: 10,
+    });
+    return {
+      meta: {
+        total,
+        page,
+        limit,
+      },
+      data,
+    };
+  }
+
   if (searchTerm) {
     andCondition.push({
       OR: productSearchableFields?.map((field) => ({
@@ -114,6 +149,11 @@ const getAllProduct = async (query: IProductQuery, options: any) => {
     include: {
       category: true,
       shop: true,
+      reviews: {
+        include: {
+          user: true,
+        },
+      },
     },
   });
   const total = await prisma.product.count({
@@ -156,24 +196,45 @@ const getMyProducts = async (user: IUser) => {
     include: {
       category: true,
       shop: true,
-      reviews: true,
+      reviews: {
+        include: {
+          user: true,
+        },
+      },
     },
   });
   return product;
 };
+
 const getSingleProduct = async (id: string) => {
+  await prisma.product.update({
+    where: {
+      id,
+    },
+    data: {
+      view: {
+        increment: 1,
+      },
+    },
+  });
   const product = await prisma.product.findUnique({
     where: {
       id,
     },
     include: {
-      shop: true,
       category: true,
+      shop: true,
+      reviews: {
+        include: {
+          user: true,
+        },
+      },
     },
   });
   if (!product) {
     throw new AppError(httpStatus.NOT_FOUND, "Product is not found");
   }
+
   return product;
 };
 

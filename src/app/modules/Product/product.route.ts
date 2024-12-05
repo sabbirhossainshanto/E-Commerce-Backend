@@ -19,7 +19,9 @@ router.post(
 );
 
 router.get("/", productController.getAllProduct);
+
 router.get("/my-products", auth(Role.VENDOR), productController.getMyProducts);
+
 router.get("/:productId", productController.getSingleProduct);
 
 router.patch(

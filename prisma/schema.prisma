@@ -71,6 +71,7 @@ model Product {
   inventory   Int
   categoryId  String
   discount    Int?
+  view        Int      @default(0)
   category    Category @relation(fields: [categoryId], references: [id])
   shopId      String
   shop        Shop     @relation(fields: [shopId], references: [id])
@@ -104,6 +105,7 @@ model Coupon {
 model Order {
   id            String      @id @default(uuid())
   transactionId String
+  isReviewed    Boolean     @default(false)
   quantity      Int
   isPaid        Boolean     @default(false)
   status        OrderStatus @default(PENDING)
@@ -121,14 +123,16 @@ model Order {
 
 model Review {
   id        String   @id @default(uuid())
-  rating    Int      @default(0)
-  comment   String?
+  rating    Int
+  comment   String
   userId    String
   productId String
   user      User     @relation(fields: [userId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
 }
 
 enum Role {

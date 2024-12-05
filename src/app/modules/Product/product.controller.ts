@@ -46,6 +46,7 @@ const getMyProducts = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
 const getSingleProduct = catchAsync(async (req, res) => {
   const { productId } = req.params;
   const result = await productService.getSingleProduct(productId);
@@ -53,7 +54,7 @@ const getSingleProduct = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Product id retrieved successfully",
+    message: "Product is retrieved successfully",
     data: result,
   });
 });

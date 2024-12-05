@@ -23,6 +23,28 @@ const getMyOrders = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+const getAllOrders = catchAsync(async (req, res) => {
+  const result = await orderService.getAllOrders(req.user);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Order are retrieved successfully",
+    data: result,
+  });
+});
+const updateOrderStatus = catchAsync(async (req, res) => {
+  const { orderId } = req.params;
+  const result = await orderService.updateOrderStatus(orderId, req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Order is updated successfully",
+    data: result,
+  });
+});
 const deleteMyOrder = catchAsync(async (req, res) => {
   const result = await orderService.deleteMyOrders(req.params?.orderId);
 
@@ -38,4 +60,6 @@ export const orderController = {
   createOrder,
   getMyOrders,
   deleteMyOrder,
+  getAllOrders,
+  updateOrderStatus,
 };

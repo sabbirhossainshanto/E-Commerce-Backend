@@ -57,7 +57,19 @@ const getMyShop = async (user: IUser) => {
     where: {
       userId: userData?.id,
     },
+    include: {
+      orders: {
+        include: {
+          product: true,
+        },
+      },
+      products: true,
+      follower: true,
+      user: true,
+    },
   });
+
+  console.log({ shop });
   if (shop?.status === "BLOCKED") {
     throw new AppError(
       httpStatus.FORBIDDEN,
