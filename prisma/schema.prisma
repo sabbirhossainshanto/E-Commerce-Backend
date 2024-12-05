@@ -8,77 +8,38 @@ datasource db {
 }
 
 model User {
-  id              String             @id @default(uuid())
-  name            String
-  email           String             @unique
-  password        String
-  role            Role               @default(USER)
-  profilePhoto    String?
-  status          UserStatus         @default(ACTIVE)
-  isDeleted       Boolean            @default(false)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  vendor          Shop?
-  orders          Order[]
-  reviews         Review[]
-  followedVendors UserVendorFollow[]
-  cart            Cart[]
+  id           String           @id @default(uuid())
+  name         String
+  email        String           @unique
+  password     String
+  role         Role             @default(USER)
+  profilePhoto String?
+  status       UserStatus       @default(ACTIVE)
+  isDeleted    Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  vendor       Shop?
+  orders       Order[]
+  reviews      Review[]
+  cart         Cart[]
+  following    UserShopFollow[]
 }
 
 model Shop {
-  id          String  @id @default(uuid())
+  id          String           @id @default(uuid())
   shopName    String
   shopLogo    String?
   shopDetails String?
-  userId      String  @unique
-  user        User    @relation(fields: [userId], references: [id])
-
-  products  Product[]
-  orders    Order[]
-  followers UserVendorFollow[]
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  status      ShopStatus       @default(ACTIVE)
+  userId      String           @unique
+  user        User             @relation(fields: [userId], references: [id])
+  products    Product[]
+  orders      Order[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  follower    UserShopFollow[]
 
   @@map("shop")
-}
-
-model UserVendorFollow {
-  id        String   @id @default(uuid())
-  userId    String
-  vendorId  String
-  user      User     @relation(fields: [userId], references: [id])
-  vendor    Shop     @relation(fields: [vendorId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, vendorId]) // Prevent duplicate follows
-}
-
-model Product {
-  id           String         @id @default(uuid())
-  name         String
-  description  String
-  price        Float
-  inventory    Int
-  categoryId   String
-  discount     Int?
-  category     Category       @relation(fields: [categoryId], references: [id])
-  shopId       String
-  shop         Shop           @relation(fields: [shopId], references: [id])
-  images       String[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  reviews      Review[]
-  orderProduct OrderProduct[]
-  cart         Cart[]
-}
-
-model Coupon {
-  id        String   @id @default(uuid())
-  code      String   @unique
-  discount  Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Category {
@@ -90,26 +51,70 @@ model Category {
   updatedAt DateTime  @updatedAt
 }
 
-model Order {
-  id         String         @id @default(uuid())
-  userId     String
-  vendorId   String
-  totalPrice Float
-  status     OrderStatus
-  user       User           @relation(fields: [userId], references: [id])
-  vendor     Shop           @relation(fields: [vendorId], references: [id])
-  products   OrderProduct[]
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+model UserShopFollow {
+  id        String   @id @default(uuid())
+  userId    String
+  shopId    String
+  user      User     @relation(fields: [userId], references: [id])
+  vendor    Shop     @relation(fields: [shopId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, shopId])
 }
 
-model OrderProduct {
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  inventory   Int
+  categoryId  String
+  discount    Int?
+  category    Category @relation(fields: [categoryId], references: [id])
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id])
+  images      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reviews     Review[]
+  cart        Cart[]
+  order       Order[]
+}
+
+model Cart {
   id        String   @id @default(uuid())
-  orderId   String
-  productId String
   quantity  Int
+  productId String   @unique
   product   Product  @relation(fields: [productId], references: [id])
-  order     Order    @relation(fields: [orderId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Coupon {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  discount  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  transactionId String
+  quantity      Int
+  isPaid        Boolean     @default(false)
+  status        OrderStatus @default(PENDING)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  shopId        String
+  shop          Shop        @relation(fields: [shopId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -122,17 +127,6 @@ model Review {
   productId String
   user      User     @relation(fields: [userId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Cart {
-  id        String   @id @default(uuid())
-  quantity  Int
-  productId String   @unique
-  product   Product  @relation(fields: [productId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -150,6 +144,11 @@ enum OrderStatus {
 }
 
 enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum ShopStatus {
   ACTIVE
   BLOCKED
 }

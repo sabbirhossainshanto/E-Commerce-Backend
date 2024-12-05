@@ -19,6 +19,7 @@ router.post(
 );
 
 router.get("/", auth(Role.ADMIN), shopController.getAllShop);
+router.get("/:shopId", shopController.getSingleShop);
 router.get("/my-shop", auth(Role.VENDOR), shopController.getMyShop);
 
 router.patch(
@@ -28,6 +29,12 @@ router.patch(
   parseRequest,
   validateRequest(shopValidation.updateShop),
   shopController.updateMyShop
+);
+router.patch(
+  "/status",
+  auth(Role.ADMIN),
+  validateRequest(shopValidation.updateShopStatus),
+  shopController.updateShopStatus
 );
 router.delete("/my-shop", auth(Role.VENDOR), shopController.deleteMyShop);
 

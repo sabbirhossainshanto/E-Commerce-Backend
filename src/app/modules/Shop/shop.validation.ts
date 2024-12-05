@@ -1,3 +1,4 @@
+import { ShopStatus } from "@prisma/client";
 import { z } from "zod";
 
 const createShop = z.object({
@@ -16,8 +17,17 @@ const updateShop = z.object({
       .optional(),
   }),
 });
+const updateShopStatus = z.object({
+  body: z.object({
+    status: z.enum([ShopStatus.ACTIVE, ShopStatus.BLOCKED], {
+      required_error: "Status is required",
+    }),
+    shopId: z.string({ required_error: "Shop id is required" }),
+  }),
+});
 
 export const shopValidation = {
   createShop,
   updateShop,
+  updateShopStatus,
 };

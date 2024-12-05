@@ -37,6 +37,17 @@ const getMyShop = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const getSingleShop = catchAsync(async (req, res) => {
+  const { shopId } = req.params;
+  const result = await shopService.getSingleShop(shopId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Shops is retrieved successfully",
+    data: result,
+  });
+});
 
 const updateMyShop = catchAsync(async (req, res) => {
   const result = await shopService.updateMyShop(
@@ -49,6 +60,16 @@ const updateMyShop = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Shops is updated successfully",
+    data: result,
+  });
+});
+const updateShopStatus = catchAsync(async (req, res) => {
+  const result = await shopService.updateShopStatus(req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Shops status updated successfully",
     data: result,
   });
 });
@@ -69,4 +90,6 @@ export const shopController = {
   getMyShop,
   updateMyShop,
   deleteMyShop,
+  updateShopStatus,
+  getSingleShop,
 };

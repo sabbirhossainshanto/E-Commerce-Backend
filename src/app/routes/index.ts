@@ -5,6 +5,9 @@ import { categoryRoutes } from "../modules/Category/category.route";
 import { shopRoutes } from "../modules/Shop/shop.route";
 import { productRoute } from "../modules/Product/product.route";
 import { cartRoutes } from "../modules/Cart/cart.route";
+import { userShopFollowRoutes } from "../modules/UserShopFollow/userShopFollow.route";
+import { orderRoutes } from "../modules/Order/order.route";
+import { paymentRoute } from "../modules/payment/payment.route";
 
 const router = Router();
 
@@ -32,6 +35,18 @@ const moduleRoutes = [
   {
     path: "/carts",
     route: cartRoutes,
+  },
+  {
+    path: "/follow-shop",
+    route: userShopFollowRoutes,
+  },
+  {
+    path: "/orders",
+    route: orderRoutes,
+  },
+  {
+    path: "/payment",
+    route: paymentRoute,
   },
 ];
 

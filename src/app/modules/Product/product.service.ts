@@ -40,6 +40,13 @@ const createProduct = async (
     throw new AppError(httpStatus.NOT_FOUND, "Shop is not found");
   }
 
+  if (shop?.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Your shop is been blocked by admin"
+    );
+  }
+
   payload.shopId = shop.id;
 
   if (files?.length > 0) {
@@ -159,6 +166,10 @@ const getSingleProduct = async (id: string) => {
     where: {
       id,
     },
+    include: {
+      shop: true,
+      category: true,
+    },
   });
   if (!product) {
     throw new AppError(httpStatus.NOT_FOUND, "Product is not found");
@@ -178,6 +189,19 @@ const updateSingleProduct = async (
   });
   if (!product) {
     throw new AppError(httpStatus.NOT_FOUND, "Product is not found");
+  }
+
+  const shop = await prisma.shop.findUnique({
+    where: {
+      id: product?.shopId,
+    },
+  });
+
+  if (shop?.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Your shop is been blocked by admin"
+    );
   }
 
   if (files?.length > 0) {

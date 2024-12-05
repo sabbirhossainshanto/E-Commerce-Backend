@@ -4,6 +4,7 @@ import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 import { fileUploader } from "../../../utils/fileUploader";
 import { IUser } from "../User/user.interface";
+import { IUpdateShopStatus } from "./shop.interface";
 
 const createShop = async (
   user: IUser,
@@ -42,7 +43,7 @@ const createShop = async (
 };
 
 const getAllShop = async () => {
-  return await prisma.shop.findMany();
+  return await prisma.shop.findMany({ include: { user: true } });
 };
 
 const getMyShop = async (user: IUser) => {
@@ -55,6 +56,27 @@ const getMyShop = async (user: IUser) => {
   const shop = await prisma.shop.findUnique({
     where: {
       userId: userData?.id,
+    },
+  });
+  if (shop?.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Your shop is been blocked by admin"
+    );
+  }
+
+  return shop;
+};
+
+const getSingleShop = async (id: string) => {
+  const shop = await prisma.shop.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      products: true,
+      follower: true,
+      user: true,
     },
   });
 
@@ -85,6 +107,12 @@ const updateMyShop = async (
   if (!shop) {
     throw new AppError(httpStatus.BAD_REQUEST, "Shop is not found");
   }
+  if (shop?.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Your shop is been blocked by admin"
+    );
+  }
 
   if (file) {
     const { secure_url } = await fileUploader.uploadToCloudinary(file);
@@ -96,6 +124,26 @@ const updateMyShop = async (
       userId: userData?.id,
     },
     data: payload,
+  });
+  return result;
+};
+const updateShopStatus = async (payload: IUpdateShopStatus) => {
+  const shop = await prisma.shop.findUnique({
+    where: {
+      id: payload.shopId,
+    },
+  });
+  if (!shop) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Shop is not found");
+  }
+
+  const result = await prisma.shop.update({
+    where: {
+      id: payload.shopId,
+    },
+    data: {
+      status: payload.status,
+    },
   });
   return result;
 };
@@ -135,4 +183,6 @@ export const shopService = {
   getMyShop,
   updateMyShop,
   deleteMyShop,
+  updateShopStatus,
+  getSingleShop,
 };
