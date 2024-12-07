@@ -7,7 +7,12 @@ import { orderValidation } from "./order.validation";
 
 const router = Router();
 
-router.post("/create-order", auth(Role.USER), orderController.createOrder);
+router.post(
+  "/create-order",
+  auth(Role.USER),
+
+  orderController.createOrder
+);
 
 router.get("/my-order", auth(Role.USER), orderController.getMyOrders);
 router.get("/", auth(Role.ADMIN), orderController.getAllOrders);

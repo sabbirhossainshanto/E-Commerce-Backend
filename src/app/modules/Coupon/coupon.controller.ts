@@ -13,6 +13,16 @@ const createCoupon = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const validateCoupon = catchAsync(async (req, res) => {
+  const result = await couponService.validateCoupon(req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Discount retrieved successfully",
+    data: result,
+  });
+});
 const getAllCoupon = catchAsync(async (req, res) => {
   const result = await couponService.getAllCoupon();
 
@@ -39,4 +49,5 @@ export const couponController = {
   createCoupon,
   getAllCoupon,
   deleteCoupon,
+  validateCoupon,
 };

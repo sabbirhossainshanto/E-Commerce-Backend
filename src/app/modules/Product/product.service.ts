@@ -67,6 +67,10 @@ const getAllProduct = async (query: IProductQuery, options: any) => {
   const { searchTerm, category, ...restQueries } = query;
   const andCondition: Prisma.ProductWhereInput[] = [];
 
+  andCondition.push({
+    isFlashSale: false,
+  });
+
   if (searchTerm == "recentViewedProduct") {
     const data = await prisma.product.findMany({
       where: {
