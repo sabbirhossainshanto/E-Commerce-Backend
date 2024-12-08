@@ -15,6 +15,11 @@ router.post(
 );
 
 router.get("/my-order", auth(Role.USER), orderController.getMyOrders);
+router.get(
+  "/shop-order/:shopId",
+  auth(Role.VENDOR),
+  orderController.getShopOrder
+);
 router.get("/", auth(Role.ADMIN), orderController.getAllOrders);
 
 router.delete(

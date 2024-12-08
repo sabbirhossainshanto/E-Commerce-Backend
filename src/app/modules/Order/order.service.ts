@@ -6,6 +6,8 @@ import { initiatePayment } from "../payment/payment.utils";
 import { DiscountType, OrderStatus } from "@prisma/client";
 import { calculateDiscount } from "../../../utils/calculateDiscount";
 import { IOrder } from "./order.interface";
+import { IPaginationOptions } from "../../interfaces/pagination";
+import { paginationHelper } from "../../helpers/paginationHelper";
 
 const createOrder = async (
   user: IUser,
@@ -122,29 +124,112 @@ const createOrder = async (
   return paymentSession;
 };
 
-const getAllOrders = async (user: IUser) => {
+const getAllOrders = async (user: IUser, options: IPaginationOptions) => {
+  const { limit, skip, sortBy, sortOrder, page } =
+    paginationHelper.calculatePagination(options);
   const orders = await prisma.order.findMany({
+    skip,
+    take: limit,
+    orderBy:
+      sortBy && sortOrder
+        ? {
+            [sortBy]: sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
     include: {
       product: true,
       shop: true,
     },
   });
 
-  return orders;
+  const total = await prisma.order.count();
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: orders,
+  };
 };
 
-const getMyOrders = async (user: IUser) => {
+const getMyOrders = async (user: IUser, options: IPaginationOptions) => {
+  const { limit, skip, sortBy, sortOrder, page } =
+    paginationHelper.calculatePagination(options);
+
   const orders = await prisma.order.findMany({
     where: {
       userId: user?.id,
     },
+    skip,
+    take: limit,
+    orderBy:
+      sortBy && sortOrder
+        ? {
+            [sortBy]: sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
     include: {
       product: true,
       shop: true,
     },
   });
 
-  return orders;
+  const total = await prisma.order.count({
+    where: {
+      userId: user?.id,
+    },
+  });
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: orders,
+  };
+};
+const geShopOrders = async (shopId: string, options: IPaginationOptions) => {
+  const { limit, skip, sortBy, sortOrder, page } =
+    paginationHelper.calculatePagination(options);
+
+  const orders = await prisma.order.findMany({
+    where: {
+      shopId,
+    },
+    skip,
+    take: limit,
+    orderBy:
+      sortBy && sortOrder
+        ? {
+            [sortBy]: sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
+    include: {
+      product: true,
+      shop: true,
+    },
+  });
+
+  const total = await prisma.order.count({
+    where: {
+      shopId,
+    },
+  });
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: orders,
+  };
 };
 
 const deleteMyOrders = async (id: string) => {
@@ -189,5 +274,6 @@ export const orderService = {
   getMyOrders,
   deleteMyOrders,
   getAllOrders,
+  geShopOrders,
   updateOrderStatus,
 };

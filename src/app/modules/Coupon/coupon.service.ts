@@ -2,6 +2,8 @@ import { Coupon } from "@prisma/client";
 import prisma from "../../helpers/prisma";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
+import { IPaginationOptions } from "../../interfaces/pagination";
+import { paginationHelper } from "../../helpers/paginationHelper";
 
 const createCoupon = async (payload: Coupon) => {
   const coupon = await prisma.coupon.findUnique({
@@ -63,9 +65,26 @@ const validateCoupon = async (payload: {
 
   return coupon;
 };
-const getAllCoupon = async () => {
-  const coupon = await prisma.coupon.findMany();
-  return coupon;
+const getAllCoupon = async (options: IPaginationOptions) => {
+  const { limit, page, skip } = paginationHelper.calculatePagination(options);
+  const result = await prisma.coupon.findMany({
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { createdAt: "desc" },
+  });
+  const total = await prisma.coupon.count();
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: result,
+  };
 };
 const deleteCoupon = async (id: string) => {
   const coupon = await prisma.coupon.delete({
