@@ -31,7 +31,9 @@ const createProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
 const getAllProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const filterQuery = (0, pick_1.pick)(req.query, product_const_1.productFilterableFields);
     const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
-    const { data, meta } = yield product_service_1.productService.getAllProduct(filterQuery, options);
+    const { data, meta } = yield product_service_1.productService.getAllProduct(filterQuery, options
+    // req.user
+    );
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -41,12 +43,14 @@ const getAllProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
     });
 }));
 const getMyProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield product_service_1.productService.getMyProducts(req.user);
+    const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const { data, meta } = yield product_service_1.productService.getMyProducts(req.user, options);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Product are retrieved successfully",
-        data: result,
+        data,
+        meta,
     });
 }));
 const getSingleProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -17,6 +17,6 @@ router.post("/create-product", (0, auth_1.default)(client_1.Role.VENDOR), fileUp
 router.get("/", product_controller_1.productController.getAllProduct);
 router.get("/my-products", (0, auth_1.default)(client_1.Role.VENDOR), product_controller_1.productController.getMyProducts);
 router.get("/:productId", product_controller_1.productController.getSingleProduct);
-router.patch("/:productId", (0, auth_1.default)(client_1.Role.VENDOR), fileUploader_1.fileUploader.uploadMultiple, parseRequest_1.default, (0, validateRequest_1.default)(product_validation_1.productValidation.updateProduct), product_controller_1.productController.updateSingleProduct);
+router.patch("/:productId", (0, auth_1.default)(client_1.Role.VENDOR, client_1.Role.ADMIN), fileUploader_1.fileUploader.uploadMultiple, parseRequest_1.default, (0, validateRequest_1.default)(product_validation_1.productValidation.updateProduct), product_controller_1.productController.updateSingleProduct);
 router.delete("/:productId", (0, auth_1.default)(client_1.Role.VENDOR, client_1.Role.ADMIN), product_controller_1.productController.deleteSingleProduct);
 exports.productRoute = router;

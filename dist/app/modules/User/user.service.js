@@ -16,6 +16,7 @@ exports.userService = void 0;
 const prisma_1 = __importDefault(require("../../helpers/prisma"));
 const AppError_1 = require("../../errors/AppError");
 const http_status_1 = __importDefault(require("http-status"));
+const paginationHelper_1 = require("../../helpers/paginationHelper");
 const updateUserRoleStatus = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield prisma_1.default.user.findUnique({
         where: {
@@ -34,7 +35,8 @@ const updateUserRoleStatus = (id, payload) => __awaiter(void 0, void 0, void 0, 
     });
     return result;
 });
-const getAllUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllUser = (user, options) => __awaiter(void 0, void 0, void 0, function* () {
+    const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const result = yield prisma_1.default.user.findMany({
         where: {
             isDeleted: false,
@@ -42,8 +44,21 @@ const getAllUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
                 not: user.email,
             },
         },
+        skip,
+        take: limit,
+        orderBy: options.sortBy && options.sortOrder
+            ? { [options.sortBy]: options.sortOrder }
+            : { createdAt: "desc" },
     });
-    return result;
+    const total = yield prisma_1.default.user.count();
+    return {
+        meta: {
+            total,
+            page,
+            limit,
+        },
+        data: result,
+    };
 });
 exports.userService = {
     updateUserRoleStatus,

@@ -17,6 +17,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../utils/sendResponse"));
 const order_service_1 = require("./order.service");
+const pick_1 = require("../../../utils/pick");
 const createOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield order_service_1.orderService.createOrder(req.user, req.body);
     (0, sendResponse_1.default)(res, {
@@ -27,21 +28,37 @@ const createOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     });
 }));
 const getMyOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield order_service_1.orderService.getMyOrders(req.user);
+    const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const { data, meta } = yield order_service_1.orderService.getMyOrders(req.user, options);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Order are retrieved successfully",
-        data: result,
+        data,
+        meta,
+    });
+}));
+const getShopOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const { shopId } = req.params;
+    const { data, meta } = yield order_service_1.orderService.geShopOrders(shopId, options);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Order are retrieved successfully",
+        data,
+        meta,
     });
 }));
 const getAllOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield order_service_1.orderService.getAllOrders(req.user);
+    const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const { data, meta } = yield order_service_1.orderService.getAllOrders(req.user, options);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Order are retrieved successfully",
-        data: result,
+        data,
+        meta,
     });
 }));
 const updateOrderStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -70,4 +87,5 @@ exports.orderController = {
     deleteMyOrder,
     getAllOrders,
     updateOrderStatus,
+    getShopOrder,
 };

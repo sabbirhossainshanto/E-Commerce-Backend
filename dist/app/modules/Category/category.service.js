@@ -17,6 +17,7 @@ const prisma_1 = __importDefault(require("../../helpers/prisma"));
 const AppError_1 = require("../../errors/AppError");
 const http_status_1 = __importDefault(require("http-status"));
 const fileUploader_1 = require("../../../utils/fileUploader");
+const paginationHelper_1 = require("../../helpers/paginationHelper");
 const createCategory = (file, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const category = yield prisma_1.default.category.findUnique({
         where: {
@@ -35,13 +36,27 @@ const createCategory = (file, payload) => __awaiter(void 0, void 0, void 0, func
     });
     return result;
 });
-const getAllCategories = () => __awaiter(void 0, void 0, void 0, function* () {
+const getAllCategories = (options) => __awaiter(void 0, void 0, void 0, function* () {
+    const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const result = yield prisma_1.default.category.findMany({
+        skip,
+        take: limit,
+        orderBy: options.sortBy && options.sortOrder
+            ? { [options.sortBy]: options.sortOrder }
+            : { createdAt: "desc" },
         include: {
             products: true,
         },
     });
-    return result;
+    const total = yield prisma_1.default.category.count();
+    return {
+        meta: {
+            total,
+            page,
+            limit,
+        },
+        data: result,
+    };
 });
 const getSingleCategory = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return yield prisma_1.default.category.findUnique({

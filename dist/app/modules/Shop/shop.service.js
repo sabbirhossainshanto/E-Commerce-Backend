@@ -18,6 +18,7 @@ const prisma_1 = __importDefault(require("../../helpers/prisma"));
 const AppError_1 = require("../../errors/AppError");
 const http_status_1 = __importDefault(require("http-status"));
 const fileUploader_1 = require("../../../utils/fileUploader");
+const paginationHelper_1 = require("../../helpers/paginationHelper");
 const createShop = (user, file, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = yield prisma_1.default.user.findUnique({
         where: {
@@ -47,8 +48,25 @@ const createShop = (user, file, payload) => __awaiter(void 0, void 0, void 0, fu
     });
     return result;
 });
-const getAllShop = () => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prisma_1.default.shop.findMany({ include: { user: true } });
+const getAllShop = (options) => __awaiter(void 0, void 0, void 0, function* () {
+    const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
+    const result = yield prisma_1.default.shop.findMany({
+        skip,
+        take: limit,
+        orderBy: options.sortBy && options.sortOrder
+            ? { [options.sortBy]: options.sortOrder }
+            : { createdAt: "desc" },
+        include: { user: true },
+    });
+    const total = yield prisma_1.default.shop.count();
+    return {
+        meta: {
+            total,
+            page,
+            limit,
+        },
+        data: result,
+    };
 });
 const getMyShop = (user) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = yield prisma_1.default.user.findUnique({

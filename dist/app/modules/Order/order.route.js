@@ -13,6 +13,7 @@ const order_validation_1 = require("./order.validation");
 const router = (0, express_1.Router)();
 router.post("/create-order", (0, auth_1.default)(client_1.Role.USER), order_controller_1.orderController.createOrder);
 router.get("/my-order", (0, auth_1.default)(client_1.Role.USER), order_controller_1.orderController.getMyOrders);
+router.get("/shop-order/:shopId", (0, auth_1.default)(client_1.Role.VENDOR), order_controller_1.orderController.getShopOrder);
 router.get("/", (0, auth_1.default)(client_1.Role.ADMIN), order_controller_1.orderController.getAllOrders);
 router.delete("/my-order/:orderId", (0, auth_1.default)(client_1.Role.USER), order_controller_1.orderController.deleteMyOrder);
 router.patch("/:orderId", (0, auth_1.default)(client_1.Role.ADMIN), (0, validateRequest_1.default)(order_validation_1.orderValidation.updateOrder), order_controller_1.orderController.updateOrderStatus);

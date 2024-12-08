@@ -17,6 +17,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../utils/sendResponse"));
 const category_service_1 = require("./category.service");
+const pick_1 = require("../../../utils/pick");
 const createCategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield category_service_1.categoryService.createCategory(req.file, req.body);
     (0, sendResponse_1.default)(res, {
@@ -27,12 +28,14 @@ const createCategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 const getAllCategories = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield category_service_1.categoryService.getAllCategories();
+    const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const { data, meta } = yield category_service_1.categoryService.getAllCategories(options);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Categories are retrieved successfully",
-        data: result,
+        data: data,
+        meta,
     });
 }));
 const getSingleCategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

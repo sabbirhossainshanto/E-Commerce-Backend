@@ -16,6 +16,7 @@ exports.couponService = void 0;
 const prisma_1 = __importDefault(require("../../helpers/prisma"));
 const AppError_1 = require("../../errors/AppError");
 const http_status_1 = __importDefault(require("http-status"));
+const paginationHelper_1 = require("../../helpers/paginationHelper");
 const createCoupon = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const coupon = yield prisma_1.default.coupon.findUnique({
         where: {
@@ -57,9 +58,24 @@ const validateCoupon = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }
     return coupon;
 });
-const getAllCoupon = () => __awaiter(void 0, void 0, void 0, function* () {
-    const coupon = yield prisma_1.default.coupon.findMany();
-    return coupon;
+const getAllCoupon = (options) => __awaiter(void 0, void 0, void 0, function* () {
+    const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
+    const result = yield prisma_1.default.coupon.findMany({
+        skip,
+        take: limit,
+        orderBy: options.sortBy && options.sortOrder
+            ? { [options.sortBy]: options.sortOrder }
+            : { createdAt: "desc" },
+    });
+    const total = yield prisma_1.default.coupon.count();
+    return {
+        meta: {
+            total,
+            page,
+            limit,
+        },
+        data: result,
+    };
 });
 const deleteCoupon = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const coupon = yield prisma_1.default.coupon.delete({

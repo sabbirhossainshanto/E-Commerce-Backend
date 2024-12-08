@@ -9,7 +9,7 @@ const createUser = zod_1.z.object({
         user: zod_1.z.object({
             name: zod_1.z.string({ required_error: "Name is required" }),
             email: zod_1.z.string({ required_error: "Email is required" }).email(),
-            role: zod_1.z.enum([client_1.Role.USER, client_1.Role.VENDOR]),
+            role: zod_1.z.enum([client_1.Role.USER, client_1.Role.VENDOR, client_1.Role.ADMIN]),
         }),
     }),
 });

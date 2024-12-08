@@ -12,34 +12,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userController = void 0;
+exports.flashSaleController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../utils/sendResponse"));
-const user_service_1 = require("./user.service");
-const pick_1 = require("../../../utils/pick");
-const updateUserRoleStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.params;
-    const result = yield user_service_1.userService.updateUserRoleStatus(userId, req.body);
+const flashSale_service_1 = require("./flashSale.service");
+const getAllFlashSale = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield flashSale_service_1.flashSaleService.getAllFlashSale();
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "User updated successfully",
+        message: "Flash sale are retrieved successfully",
         data: result,
     });
 }));
-const getAllUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
-    const { data, meta } = yield user_service_1.userService.getAllUser(req.user, options);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_1.default.OK,
-        success: true,
-        message: "Users are retrieved successfully",
-        data: data,
-        meta,
-    });
-}));
-exports.userController = {
-    updateUserRoleStatus,
-    getAllUser,
+exports.flashSaleController = {
+    getAllFlashSale,
 };

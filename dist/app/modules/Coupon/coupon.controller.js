@@ -17,6 +17,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../utils/sendResponse"));
 const coupon_service_1 = require("./coupon.service");
+const pick_1 = require("../../../utils/pick");
 const createCoupon = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield coupon_service_1.couponService.createCoupon(req.body);
     (0, sendResponse_1.default)(res, {
@@ -36,12 +37,14 @@ const validateCoupon = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 const getAllCoupon = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield coupon_service_1.couponService.getAllCoupon();
+    const options = (0, pick_1.pick)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const { data, meta } = yield coupon_service_1.couponService.getAllCoupon(options);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Coupon are retrieved successfully",
-        data: result,
+        data: data,
+        meta,
     });
 }));
 const deleteCoupon = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
