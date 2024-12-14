@@ -10,12 +10,14 @@ app.use(
   cors({
     credentials: true,
     origin: [
-      "https://multivendor-e-commerce.netlify.app/",
+      "https://multivendor-e-commerce.netlify.app",
       "http://localhost:3001",
-      "https://e-commerce-rho-nine.vercel.app/",
+      "https://e-commerce-rho-nine.vercel.app",
     ],
   })
 );
+// Handle preflight requests explicitly (if needed)
+app.options("*", cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
