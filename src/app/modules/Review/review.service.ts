@@ -66,6 +66,18 @@ const addReviewToProduct = async (user: IUser, payload: Review) => {
   return result;
 };
 
+const getSingleProductReview = async (productId: string) => {
+  return await prisma.review.findMany({
+    where: {
+      productId,
+    },
+    include: {
+      user: true,
+    },
+  });
+};
+
 export const reviewService = {
   addReviewToProduct,
+  getSingleProductReview,
 };

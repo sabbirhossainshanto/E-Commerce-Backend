@@ -212,7 +212,11 @@ const geShopOrders = async (shopId: string, options: IPaginationOptions) => {
             createdAt: "desc",
           },
     include: {
-      product: true,
+      product: {
+        include: {
+          reviews: true,
+        },
+      },
       shop: true,
     },
   });

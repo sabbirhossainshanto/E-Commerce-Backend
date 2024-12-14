@@ -39,6 +39,12 @@ const createProduct = (user, files, payload) => __awaiter(void 0, void 0, void 0
     if (!userData) {
         throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "User is not found");
     }
+    if ((userData === null || userData === void 0 ? void 0 : userData.status) === "BLOCKED") {
+        throw new AppError_1.AppError(http_status_1.default.BAD_REQUEST, "You are blocked by admin");
+    }
+    if (userData === null || userData === void 0 ? void 0 : userData.isDeleted) {
+        throw new AppError_1.AppError(http_status_1.default.BAD_REQUEST, "You are deleted by admin");
+    }
     const category = yield prisma_1.default.category.findUnique({
         where: {
             id: payload.categoryId,
@@ -68,7 +74,7 @@ const createProduct = (user, files, payload) => __awaiter(void 0, void 0, void 0
     });
     return result;
 });
-const getAllProduct = (query, options) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllProduct = (query, options, user) => __awaiter(void 0, void 0, void 0, function* () {
     const { limit, skip, sortBy, sortOrder, page } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const { searchTerm, category } = query, restQueries = __rest(query, ["searchTerm", "category"]);
     const andCondition = [];
@@ -108,6 +114,16 @@ const getAllProduct = (query, options) => __awaiter(void 0, void 0, void 0, func
             data,
         };
     }
+    // Get the followed shops of the user
+    const followedShops = yield prisma_1.default.userShopFollow.findMany({
+        where: {
+            userId: user === null || user === void 0 ? void 0 : user.email,
+        },
+        select: {
+            shopId: true,
+        },
+    });
+    const followedShopIds = followedShops.map((follow) => follow.shopId);
     if (searchTerm) {
         andCondition.push({
             OR: product_const_1.productSearchableFields === null || product_const_1.productSearchableFields === void 0 ? void 0 : product_const_1.productSearchableFields.map((field) => ({
@@ -137,17 +153,14 @@ const getAllProduct = (query, options) => __awaiter(void 0, void 0, void 0, func
         });
     }
     const whereCondition = { AND: andCondition };
-    const data = yield prisma_1.default.product.findMany({
-        where: whereCondition,
+    // Fetch followed shop products first
+    const followedProducts = yield prisma_1.default.product.findMany({
+        where: Object.assign(Object.assign({}, whereCondition), { shopId: {
+                in: followedShopIds, // Filter products from followed shops
+            } }),
         skip,
         take: limit,
-        orderBy: sortBy && sortOrder
-            ? {
-                [sortBy]: sortOrder,
-            }
-            : {
-                createdAt: "desc",
-            },
+        orderBy: sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
         include: {
             category: true,
             shop: true,
@@ -158,6 +171,26 @@ const getAllProduct = (query, options) => __awaiter(void 0, void 0, void 0, func
             },
         },
     });
+    // Fetch other products (non-followed shops)
+    const otherProducts = yield prisma_1.default.product.findMany({
+        where: Object.assign(Object.assign({}, whereCondition), { shopId: {
+                notIn: followedShopIds, // Exclude followed shops
+            } }),
+        skip,
+        take: limit - followedProducts.length, // Ensure total limit is not exceeded
+        orderBy: sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+        include: {
+            category: true,
+            shop: true,
+            reviews: {
+                include: {
+                    user: true,
+                },
+            },
+        },
+    });
+    // Combine followed products and other products
+    const data = [...followedProducts, ...otherProducts];
     const total = yield prisma_1.default.product.count({
         where: whereCondition,
     });
@@ -170,132 +203,8 @@ const getAllProduct = (query, options) => __awaiter(void 0, void 0, void 0, func
         data,
     };
 });
-// const getAllProduct = async (
-//   query: IProductQuery,
-//   options: any,
-//   user?: IUser // Optional user parameter
-// ) => {
-//   const { limit, skip, sortBy, sortOrder, page } =
-//     paginationHelper.calculatePagination(options);
-//   const { searchTerm, category, ...restQueries } = query;
-//   const andCondition: Prisma.ProductWhereInput[] = [];
-//   andCondition.push({
-//     isFlashSale: false,
-//   });
-//   // Fetch the list of shops followed by the user (only if user exists)
-//   let followedShopIds: string[] = [];
-//   if (user) {
-//     const followedShops = await prisma.userShopFollow.findMany({
-//       where: { userId: user.id },
-//       select: { shopId: true },
-//     });
-//     followedShopIds = followedShops.map((shop) => shop.shopId);
-//   }
-//   // Base query condition
-//   if (searchTerm) {
-//     andCondition.push({
-//       OR: productSearchableFields?.map((field) => ({
-//         [field]: {
-//           contains: searchTerm,
-//           mode: "insensitive",
-//         },
-//       })),
-//     });
-//   }
-//   if (category) {
-//     andCondition.push({
-//       category: {
-//         name: {
-//           contains: category,
-//         },
-//       },
-//     });
-//   }
-//   if (Object.keys(restQueries).length > 0) {
-//     andCondition.push({
-//       AND: Object.keys(restQueries).map((key) => ({
-//         [key]: {
-//           equals: (restQueries as any)[key],
-//         },
-//       })),
-//     });
-//   }
-//   const whereCondition: Prisma.ProductWhereInput = { AND: andCondition };
-//   // Fetch products based on whether the user is logged in
-//   let data: any[] = [];
-//   let total = 0;
-//   if (user && followedShopIds.length > 0) {
-//     // Fetch products from followed shops
-//     const followedShopProducts = await prisma.product.findMany({
-//       where: {
-//         ...whereCondition,
-//         shopId: { in: followedShopIds },
-//       },
-//       orderBy:
-//         sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
-//       include: {
-//         category: true,
-//         shop: true,
-//         reviews: {
-//           include: {
-//             user: true,
-//           },
-//         },
-//       },
-//     });
-//     // Fetch remaining products
-//     const otherProducts = await prisma.product.findMany({
-//       where: {
-//         ...whereCondition,
-//         shopId: { notIn: followedShopIds },
-//       },
-//       orderBy:
-//         sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
-//       include: {
-//         category: true,
-//         shop: true,
-//         reviews: {
-//           include: {
-//             user: true,
-//           },
-//         },
-//       },
-//     });
-//     // Combine results prioritizing followed shop products
-//     data = [...followedShopProducts, ...otherProducts];
-//     // Apply pagination
-//     data = data.slice(skip, skip + limit);
-//     total = followedShopProducts.length + otherProducts.length;
-//   } else {
-//     // User is not logged in, fetch products without follow logic
-//     data = await prisma.product.findMany({
-//       where: whereCondition,
-//       skip,
-//       take: limit,
-//       orderBy:
-//         sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
-//       include: {
-//         category: true,
-//         shop: true,
-//         reviews: {
-//           include: {
-//             user: true,
-//           },
-//         },
-//       },
-//     });
-//     total = await prisma.product.count({ where: whereCondition });
-//   }
-//   return {
-//     meta: {
-//       total,
-//       page,
-//       limit,
-//     },
-//     data,
-//   };
-// };
-const getMyProducts = (user, options) => __awaiter(void 0, void 0, void 0, function* () {
+const getMyProducts = (user, options, query) => __awaiter(void 0, void 0, void 0, function* () {
+    const { searchTerm } = query;
     const { limit, skip, sortBy, sortOrder, page } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const userData = yield prisma_1.default.user.findUnique({
         where: {
@@ -313,10 +222,25 @@ const getMyProducts = (user, options) => __awaiter(void 0, void 0, void 0, funct
     if (!shop) {
         throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "Shop is not found");
     }
+    const andCondition = [];
+    andCondition.push({
+        shopId: shop === null || shop === void 0 ? void 0 : shop.id,
+    });
+    if (searchTerm) {
+        if (searchTerm == "flashSale") {
+            andCondition.push({
+                isFlashSale: true,
+            });
+        }
+        if (searchTerm == "product") {
+            andCondition.push({
+                isFlashSale: false,
+            });
+        }
+    }
+    const whereCondition = { AND: andCondition };
     const product = yield prisma_1.default.product.findMany({
-        where: {
-            shopId: shop.id,
-        },
+        where: whereCondition,
         skip,
         take: limit,
         orderBy: sortBy && sortOrder

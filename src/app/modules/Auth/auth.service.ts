@@ -67,13 +67,24 @@ const createUser = async (
 };
 
 const loginUser = async (payload: { email: string; password: string }) => {
-  const user = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: {
       email: payload.email,
       isDeleted: false,
     },
   });
 
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found!");
+  }
+
+  if (user?.status === "BLOCKED") {
+    throw new AppError(httpStatus.NOT_FOUND, "You are blocked by admin!");
+  }
+
+  if (user?.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is already deleted!");
+  }
   const isPasswordMatched = await bcrypt.compare(
     payload.password,
     user.password
@@ -113,7 +124,10 @@ const loginUser = async (payload: { email: string; password: string }) => {
 const refreshToken = async (token: string) => {
   let decodedData;
   try {
-    decodedData = jwtHelper.verifyToken(token, "abcdefgh");
+    decodedData = jwtHelper.verifyToken(
+      token,
+      config.jwt_refresh_secret as string
+    );
   } catch (error) {
     throw new Error("You are not authorized!");
   }
@@ -136,13 +150,23 @@ const changePassword = async (
   user: JwtPayload,
   payload: { oldPassword: string; newPassword: string }
 ) => {
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: {
       email: user.email,
       isDeleted: false,
     },
   });
 
+  if (!userData) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (userData?.status === "BLOCKED") {
+    throw new AppError(httpStatus.NOT_FOUND, "You are blocked by admin!");
+  }
+  if (userData?.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is already deleted!");
+  }
   const isPasswordMatched = await bcrypt.compare(
     payload.oldPassword,
     userData.password
@@ -165,13 +189,22 @@ const changePassword = async (
 };
 
 const forgotPassword = async (payload: { email: string }) => {
-  const user = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: {
       email: payload.email,
       isDeleted: false,
     },
   });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
 
+  if (user?.status === "BLOCKED") {
+    throw new AppError(httpStatus.NOT_FOUND, "You are blocked by admin!");
+  }
+  if (user?.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is already deleted!");
+  }
   const token = jwtHelper.generateToken(
     { email: user.email, role: user.role },
     config.reset_password_secret as string,
@@ -212,7 +245,12 @@ const resetPassword = async (
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found!");
   }
-
+  if (user?.status === "BLOCKED") {
+    throw new AppError(httpStatus.NOT_FOUND, "You are blocked by admin!");
+  }
+  if (user?.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is already deleted!");
+  }
   const hashedPassword = await bcrypt.hash(payload.password, 12);
   await prisma.user.update({
     where: {

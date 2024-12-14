@@ -23,6 +23,14 @@ const createProduct = async (
     throw new AppError(httpStatus.NOT_FOUND, "User is not found");
   }
 
+  if (userData?.status === "BLOCKED") {
+    throw new AppError(httpStatus.BAD_REQUEST, "You are blocked by admin");
+  }
+
+  if (userData?.isDeleted) {
+    throw new AppError(httpStatus.BAD_REQUEST, "You are deleted by admin");
+  }
+
   const category = await prisma.category.findUnique({
     where: {
       id: payload.categoryId,
@@ -64,7 +72,8 @@ const createProduct = async (
 
 const getAllProduct = async (
   query: IProductQuery,
-  options: IPaginationOptions
+  options: IPaginationOptions,
+  user: IUser
 ) => {
   const { limit, skip, sortBy, sortOrder, page } =
     paginationHelper.calculatePagination(options);
@@ -110,6 +119,18 @@ const getAllProduct = async (
     };
   }
 
+  // Get the followed shops of the user
+  const followedShops = await prisma.userShopFollow.findMany({
+    where: {
+      userId: user?.email,
+    },
+    select: {
+      shopId: true,
+    },
+  });
+
+  const followedShopIds = followedShops.map((follow) => follow.shopId);
+
   if (searchTerm) {
     andCondition.push({
       OR: productSearchableFields?.map((field) => ({
@@ -142,18 +163,19 @@ const getAllProduct = async (
   }
 
   const whereCondition: Prisma.ProductWhereInput = { AND: andCondition };
-  const data = await prisma.product.findMany({
-    where: whereCondition,
+
+  // Fetch followed shop products first
+  const followedProducts = await prisma.product.findMany({
+    where: {
+      ...whereCondition,
+      shopId: {
+        in: followedShopIds, // Filter products from followed shops
+      },
+    },
     skip,
     take: limit,
     orderBy:
-      sortBy && sortOrder
-        ? {
-            [sortBy]: sortOrder,
-          }
-        : {
-            createdAt: "desc",
-          },
+      sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
     include: {
       category: true,
       shop: true,
@@ -164,9 +186,37 @@ const getAllProduct = async (
       },
     },
   });
+
+  // Fetch other products (non-followed shops)
+  const otherProducts = await prisma.product.findMany({
+    where: {
+      ...whereCondition,
+      shopId: {
+        notIn: followedShopIds, // Exclude followed shops
+      },
+    },
+    skip,
+    take: limit - followedProducts.length, // Ensure total limit is not exceeded
+    orderBy:
+      sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+    include: {
+      category: true,
+      shop: true,
+      reviews: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  // Combine followed products and other products
+  const data = [...followedProducts, ...otherProducts];
+
   const total = await prisma.product.count({
     where: whereCondition,
   });
+
   return {
     meta: {
       total,
@@ -176,145 +226,13 @@ const getAllProduct = async (
     data,
   };
 };
-// const getAllProduct = async (
-//   query: IProductQuery,
-//   options: any,
-//   user?: IUser // Optional user parameter
-// ) => {
-//   const { limit, skip, sortBy, sortOrder, page } =
-//     paginationHelper.calculatePagination(options);
-//   const { searchTerm, category, ...restQueries } = query;
-//   const andCondition: Prisma.ProductWhereInput[] = [];
 
-//   andCondition.push({
-//     isFlashSale: false,
-//   });
-
-//   // Fetch the list of shops followed by the user (only if user exists)
-//   let followedShopIds: string[] = [];
-//   if (user) {
-//     const followedShops = await prisma.userShopFollow.findMany({
-//       where: { userId: user.id },
-//       select: { shopId: true },
-//     });
-//     followedShopIds = followedShops.map((shop) => shop.shopId);
-//   }
-
-//   // Base query condition
-//   if (searchTerm) {
-//     andCondition.push({
-//       OR: productSearchableFields?.map((field) => ({
-//         [field]: {
-//           contains: searchTerm,
-//           mode: "insensitive",
-//         },
-//       })),
-//     });
-//   }
-
-//   if (category) {
-//     andCondition.push({
-//       category: {
-//         name: {
-//           contains: category,
-//         },
-//       },
-//     });
-//   }
-
-//   if (Object.keys(restQueries).length > 0) {
-//     andCondition.push({
-//       AND: Object.keys(restQueries).map((key) => ({
-//         [key]: {
-//           equals: (restQueries as any)[key],
-//         },
-//       })),
-//     });
-//   }
-
-//   const whereCondition: Prisma.ProductWhereInput = { AND: andCondition };
-
-//   // Fetch products based on whether the user is logged in
-//   let data: any[] = [];
-//   let total = 0;
-
-//   if (user && followedShopIds.length > 0) {
-//     // Fetch products from followed shops
-//     const followedShopProducts = await prisma.product.findMany({
-//       where: {
-//         ...whereCondition,
-//         shopId: { in: followedShopIds },
-//       },
-//       orderBy:
-//         sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
-//       include: {
-//         category: true,
-//         shop: true,
-//         reviews: {
-//           include: {
-//             user: true,
-//           },
-//         },
-//       },
-//     });
-
-//     // Fetch remaining products
-//     const otherProducts = await prisma.product.findMany({
-//       where: {
-//         ...whereCondition,
-//         shopId: { notIn: followedShopIds },
-//       },
-//       orderBy:
-//         sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
-//       include: {
-//         category: true,
-//         shop: true,
-//         reviews: {
-//           include: {
-//             user: true,
-//           },
-//         },
-//       },
-//     });
-
-//     // Combine results prioritizing followed shop products
-//     data = [...followedShopProducts, ...otherProducts];
-
-//     // Apply pagination
-//     data = data.slice(skip, skip + limit);
-//     total = followedShopProducts.length + otherProducts.length;
-//   } else {
-//     // User is not logged in, fetch products without follow logic
-//     data = await prisma.product.findMany({
-//       where: whereCondition,
-//       skip,
-//       take: limit,
-//       orderBy:
-//         sortBy && sortOrder ? { [sortBy]: sortOrder } : { createdAt: "desc" },
-//       include: {
-//         category: true,
-//         shop: true,
-//         reviews: {
-//           include: {
-//             user: true,
-//           },
-//         },
-//       },
-//     });
-//     total = await prisma.product.count({ where: whereCondition });
-//   }
-
-//   return {
-//     meta: {
-//       total,
-//       page,
-//       limit,
-//     },
-//     data,
-//   };
-// };
-
-const getMyProducts = async (user: IUser, options: IPaginationOptions) => {
+const getMyProducts = async (
+  user: IUser,
+  options: IPaginationOptions,
+  query: IProductQuery
+) => {
+  const { searchTerm } = query;
   const { limit, skip, sortBy, sortOrder, page } =
     paginationHelper.calculatePagination(options);
   const userData = await prisma.user.findUnique({
@@ -336,11 +254,27 @@ const getMyProducts = async (user: IUser, options: IPaginationOptions) => {
   if (!shop) {
     throw new AppError(httpStatus.NOT_FOUND, "Shop is not found");
   }
+  const andCondition: Prisma.ProductWhereInput[] = [];
 
+  andCondition.push({
+    shopId: shop?.id,
+  });
+
+  if (searchTerm) {
+    if (searchTerm == "flashSale") {
+      andCondition.push({
+        isFlashSale: true,
+      });
+    }
+    if (searchTerm == "product") {
+      andCondition.push({
+        isFlashSale: false,
+      });
+    }
+  }
+  const whereCondition: Prisma.ProductWhereInput = { AND: andCondition };
   const product = await prisma.product.findMany({
-    where: {
-      shopId: shop.id,
-    },
+    where: whereCondition,
 
     skip,
     take: limit,

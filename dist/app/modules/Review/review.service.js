@@ -63,6 +63,17 @@ const addReviewToProduct = (user, payload) => __awaiter(void 0, void 0, void 0, 
     }));
     return result;
 });
+const getSingleProductReview = (productId) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield prisma_1.default.review.findMany({
+        where: {
+            productId,
+        },
+        include: {
+            user: true,
+        },
+    });
+});
 exports.reviewService = {
     addReviewToProduct,
+    getSingleProductReview,
 };

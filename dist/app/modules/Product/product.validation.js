@@ -9,7 +9,6 @@ const createProduct = zod_1.z.object({
         price: zod_1.z.number({ required_error: "Price is required" }),
         inventory: zod_1.z.number({ required_error: "Inventory is required" }),
         categoryId: zod_1.z.string({ required_error: "Category id is required" }),
-        discount: zod_1.z.number({ required_error: "Discount is required" }).optional(),
     }),
 });
 const updateProduct = zod_1.z.object({
@@ -23,7 +22,6 @@ const updateProduct = zod_1.z.object({
         categoryId: zod_1.z
             .string({ required_error: "Category id is required" })
             .optional(),
-        discount: zod_1.z.number({ required_error: "Discount is required" }).optional(),
     }),
 });
 exports.productValidation = {

@@ -59,12 +59,21 @@ const createUser = (file, payload, password) => __awaiter(void 0, void 0, void 0
     };
 });
 const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield prisma_1.default.user.findUniqueOrThrow({
+    const user = yield prisma_1.default.user.findUnique({
         where: {
             email: payload.email,
             isDeleted: false,
         },
     });
+    if (!user) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "User not found!");
+    }
+    if ((user === null || user === void 0 ? void 0 : user.status) === "BLOCKED") {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "You are blocked by admin!");
+    }
+    if (user === null || user === void 0 ? void 0 : user.isDeleted) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "This user is already deleted!");
+    }
     const isPasswordMatched = yield bcrypt_1.default.compare(payload.password, user.password);
     if (!isPasswordMatched) {
         throw new Error("Password incorrect!");
@@ -91,7 +100,7 @@ const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
 const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
     let decodedData;
     try {
-        decodedData = jwtHelper_1.jwtHelper.verifyToken(token, "abcdefgh");
+        decodedData = jwtHelper_1.jwtHelper.verifyToken(token, config_1.default.jwt_refresh_secret);
     }
     catch (error) {
         throw new Error("You are not authorized!");
@@ -106,12 +115,21 @@ const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
     return accessToken;
 });
 const changePassword = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: {
             email: user.email,
             isDeleted: false,
         },
     });
+    if (!userData) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    if ((userData === null || userData === void 0 ? void 0 : userData.status) === "BLOCKED") {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "You are blocked by admin!");
+    }
+    if (userData === null || userData === void 0 ? void 0 : userData.isDeleted) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "This user is already deleted!");
+    }
     const isPasswordMatched = yield bcrypt_1.default.compare(payload.oldPassword, userData.password);
     if (!isPasswordMatched) {
         throw new Error("Password incorrect!");
@@ -128,12 +146,21 @@ const changePassword = (user, payload) => __awaiter(void 0, void 0, void 0, func
     return { message: "Password changed successfully!" };
 });
 const forgotPassword = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield prisma_1.default.user.findUniqueOrThrow({
+    const user = yield prisma_1.default.user.findUnique({
         where: {
             email: payload.email,
             isDeleted: false,
         },
     });
+    if (!user) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    if ((user === null || user === void 0 ? void 0 : user.status) === "BLOCKED") {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "You are blocked by admin!");
+    }
+    if (user === null || user === void 0 ? void 0 : user.isDeleted) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "This user is already deleted!");
+    }
     const token = jwtHelper_1.jwtHelper.generateToken({ email: user.email, role: user.role }, config_1.default.reset_password_secret, config_1.default.reset_password_expires_in);
     const link = `${config_1.default.client_base_url}/reset-password?email=${user.email}&token=${token}`;
     yield (0, sendEmail_1.default)(user.email, `
@@ -157,6 +184,12 @@ const resetPassword = (token, payload) => __awaiter(void 0, void 0, void 0, func
     });
     if (!user) {
         throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "User not found!");
+    }
+    if ((user === null || user === void 0 ? void 0 : user.status) === "BLOCKED") {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "You are blocked by admin!");
+    }
+    if (user === null || user === void 0 ? void 0 : user.isDeleted) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "This user is already deleted!");
     }
     const hashedPassword = yield bcrypt_1.default.hash(payload.password, 12);
     yield prisma_1.default.user.update({

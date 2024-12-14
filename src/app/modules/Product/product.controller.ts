@@ -24,8 +24,8 @@ const getAllProduct = catchAsync(async (req, res) => {
   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
   const { data, meta } = await productService.getAllProduct(
     filterQuery,
-    options
-    // req.user
+    options,
+    req.user
   );
 
   sendResponse(res, {
@@ -38,8 +38,13 @@ const getAllProduct = catchAsync(async (req, res) => {
 });
 
 const getMyProducts = catchAsync(async (req, res) => {
+  const filterQuery = pick(req.query, productFilterableFields);
   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
-  const { data, meta } = await productService.getMyProducts(req.user, options);
+  const { data, meta } = await productService.getMyProducts(
+    req.user,
+    options,
+    filterQuery
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -10,5 +10,10 @@ router.post(
   auth(Role.USER),
   reviewController.addReviewToProduct
 );
+router.get(
+  "/:productId",
+  auth(Role.VENDOR),
+  reviewController.getSingleProductReview
+);
 
 export const reviewRoutes = router;

@@ -177,7 +177,11 @@ const geShopOrders = (shopId, options) => __awaiter(void 0, void 0, void 0, func
                 createdAt: "desc",
             },
         include: {
-            product: true,
+            product: {
+                include: {
+                    reviews: true,
+                },
+            },
             shop: true,
         },
     });

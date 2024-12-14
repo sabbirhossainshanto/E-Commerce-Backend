@@ -45,7 +45,11 @@ const getAllCategories = (options) => __awaiter(void 0, void 0, void 0, function
             ? { [options.sortBy]: options.sortOrder }
             : { createdAt: "desc" },
         include: {
-            products: true,
+            products: {
+                where: {
+                    isFlashSale: false,
+                },
+            },
         },
     });
     const total = yield prisma_1.default.category.count();

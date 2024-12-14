@@ -81,7 +81,11 @@ const getMyShop = async (user: IUser) => {
     include: {
       orders: {
         include: {
-          product: true,
+          product: {
+            include: {
+              reviews: true,
+            },
+          },
         },
       },
       products: true,

@@ -81,7 +81,11 @@ const getMyShop = (user) => __awaiter(void 0, void 0, void 0, function* () {
         include: {
             orders: {
                 include: {
-                    product: true,
+                    product: {
+                        include: {
+                            reviews: true,
+                        },
+                    },
                 },
             },
             products: true,

@@ -37,7 +37,11 @@ const getAllCategories = async (options: IPaginationOptions) => {
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
     include: {
-      products: true,
+      products: {
+        where: {
+          isFlashSale: false,
+        },
+      },
     },
   });
   const total = await prisma.category.count();

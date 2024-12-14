@@ -10,6 +10,7 @@ app.use(
   cors({
     credentials: true,
     origin: [
+      "https://multivendor-e-commerce.netlify.app/",
       "http://localhost:3001",
       "https://e-commerce-rho-nine.vercel.app/",
     ],

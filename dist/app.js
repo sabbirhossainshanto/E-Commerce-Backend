@@ -13,6 +13,7 @@ const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
     credentials: true,
     origin: [
+        "https://multivendor-e-commerce.netlify.app/",
         "http://localhost:3001",
         "https://e-commerce-rho-nine.vercel.app/",
     ],

@@ -7,7 +7,7 @@ const createUser = z.object({
     user: z.object({
       name: z.string({ required_error: "Name is required" }),
       email: z.string({ required_error: "Email is required" }).email(),
-      role: z.enum([Role.USER, Role.VENDOR]),
+      role: z.enum([Role.USER, Role.VENDOR, Role.ADMIN]),
     }),
   }),
 });

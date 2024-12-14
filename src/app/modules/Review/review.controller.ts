@@ -13,7 +13,19 @@ const addReviewToProduct = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const getSingleProductReview = catchAsync(async (req, res) => {
+  const { productId } = req.params;
+  const result = await reviewService.getSingleProductReview(productId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Review are retrieved successfully",
+    data: result,
+  });
+});
 
 export const reviewController = {
   addReviewToProduct,
+  getSingleProductReview,
 };

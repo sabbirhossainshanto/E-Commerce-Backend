@@ -12,31 +12,41 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reviewController = void 0;
+exports.comparisonController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../utils/sendResponse"));
-const review_service_1 = require("./review.service");
-const addReviewToProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield review_service_1.reviewService.addReviewToProduct(req.user, req.body);
+const comparison_service_1 = require("./comparison.service");
+const createComparison = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield comparison_service_1.comparisonService.createComparison(req.user, req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Review created successfully",
+        message: "Comparison product selected successfully",
         data: result,
     });
 }));
-const getSingleProductReview = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { productId } = req.params;
-    const result = yield review_service_1.reviewService.getSingleProductReview(productId);
+const getMyComparisonProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield comparison_service_1.comparisonService.getMyComparisonProduct(req.user);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Review are retrieved successfully",
+        message: "Comparison product retrieved successfully",
         data: result,
     });
 }));
-exports.reviewController = {
-    addReviewToProduct,
-    getSingleProductReview,
+const deleteComparison = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    const result = yield comparison_service_1.comparisonService.deleteComparison(id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Comparison product deleted successfully",
+        data: result,
+    });
+}));
+exports.comparisonController = {
+    createComparison,
+    getMyComparisonProduct,
+    deleteComparison,
 };
