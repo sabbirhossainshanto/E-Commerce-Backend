@@ -13,6 +13,8 @@ import { couponRoutes } from "../modules/Coupon/coupon.route";
 import { flashSaleRoutes } from "../modules/FlashSale/flashSale.route";
 import { profileRoutes } from "../modules/Profile/profile.route";
 import { comparisonRoutes } from "../modules/Comparison/comparison.route";
+import { subscriberRoutes } from "../modules/Subscribers/subscriber.route";
+import { wishlistRoutes } from "../modules/Wishlist/wishlist.route";
 
 const router = Router();
 
@@ -72,6 +74,14 @@ const moduleRoutes = [
   {
     path: "/comparisons",
     route: comparisonRoutes,
+  },
+  {
+    path: "/subscriber",
+    route: subscriberRoutes,
+  },
+  {
+    path: "/wishlist",
+    route: wishlistRoutes,
   },
 ];
 

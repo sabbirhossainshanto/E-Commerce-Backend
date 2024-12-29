@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -25,6 +24,7 @@ model User {
   cart         Cart[]
   following    UserShopFollow[]
   comparison   Comparison[]
+  wishlist     Wishlist[]
 }
 
 model Shop {
@@ -87,6 +87,7 @@ model Product {
   cart                Cart[]
   order               Order[]
   comparison          Comparison[]
+  wishlist            Wishlist?
 }
 
 model Comparison {
@@ -100,6 +101,17 @@ model Comparison {
 }
 
 model Cart {
+  id        String   @id @default(uuid())
+  quantity  Int
+  productId String   @unique
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Wishlist {
   id        String   @id @default(uuid())
   quantity  Int
   productId String   @unique
@@ -155,6 +167,13 @@ model Review {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, productId])
+}
+
+model Subscriber {
+  id        String   @id @default(uuid())
+  userEmail String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {

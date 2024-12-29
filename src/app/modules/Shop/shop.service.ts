@@ -94,7 +94,6 @@ const getMyShop = async (user: IUser) => {
     },
   });
 
-  console.log({ shop });
   if (shop?.status === "BLOCKED") {
     throw new AppError(
       httpStatus.FORBIDDEN,

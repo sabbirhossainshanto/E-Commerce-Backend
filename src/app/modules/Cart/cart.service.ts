@@ -49,7 +49,6 @@ const addToCart = async (
   restPayload.userId = userData.id;
 
   const result = await prisma.$transaction(async (tx) => {
-    console.log(type);
     if (payload?.type && payload?.type === "replaceProduct") {
       await tx.cart.deleteMany({
         where: {
