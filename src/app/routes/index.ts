@@ -15,6 +15,7 @@ import { profileRoutes } from "../modules/Profile/profile.route";
 import { comparisonRoutes } from "../modules/Comparison/comparison.route";
 import { subscriberRoutes } from "../modules/Subscribers/subscriber.route";
 import { wishlistRoutes } from "../modules/Wishlist/wishlist.route";
+import { overviewRoutes } from "../modules/Overview/overview.route";
 
 const router = Router();
 
@@ -82,6 +83,10 @@ const moduleRoutes = [
   {
     path: "/wishlist",
     route: wishlistRoutes,
+  },
+  {
+    path: "/overview",
+    route: overviewRoutes,
   },
 ];
 

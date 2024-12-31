@@ -8,27 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cartService = void 0;
+exports.wishlistService = void 0;
 const prisma_1 = __importDefault(require("../../helpers/prisma"));
 const AppError_1 = require("../../errors/AppError");
 const http_status_1 = __importDefault(require("http-status"));
-const addToCart = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { type } = payload, restPayload = __rest(payload, ["type"]);
+const addToWishlist = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = yield prisma_1.default.user.findUnique({
         where: {
             email: user.email,
@@ -48,39 +36,29 @@ const addToCart = (user, payload) => __awaiter(void 0, void 0, void 0, function*
     if (product.inventory === 0 || product.inventory < payload.quantity) {
         throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "insufficient  product quantity");
     }
-    const isAddedToCart = yield prisma_1.default.cart.findUnique({
+    const isAddedToWishlist = yield prisma_1.default.wishlist.findUnique({
         where: {
             productId: payload === null || payload === void 0 ? void 0 : payload.productId,
         },
     });
-    if (isAddedToCart) {
-        throw new AppError_1.AppError(http_status_1.default.BAD_REQUEST, "This product is already in your cart");
+    if (isAddedToWishlist) {
+        throw new AppError_1.AppError(http_status_1.default.BAD_REQUEST, "This product is already in your Wishlist");
     }
-    restPayload.userId = userData.id;
-    const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        if ((payload === null || payload === void 0 ? void 0 : payload.type) && (payload === null || payload === void 0 ? void 0 : payload.type) === "replaceProduct") {
-            yield tx.cart.deleteMany({
-                where: {
-                    userId: user === null || user === void 0 ? void 0 : user.id,
-                },
-            });
-        }
-        const cartData = yield tx.cart.create({
-            data: restPayload,
-            include: {
-                product: {
-                    include: {
-                        shop: true,
-                    },
+    payload.userId = user === null || user === void 0 ? void 0 : user.id;
+    const result = yield prisma_1.default.wishlist.create({
+        data: payload,
+        include: {
+            product: {
+                include: {
+                    shop: true,
                 },
             },
-        });
-        return cartData;
-    }));
+        },
+    });
     return result;
 });
-const getMyCartProduct = (user) => __awaiter(void 0, void 0, void 0, function* () {
-    const cartProduct = yield prisma_1.default.cart.findMany({
+const getMyWishlistProduct = (user) => __awaiter(void 0, void 0, void 0, function* () {
+    const WishlistProduct = yield prisma_1.default.wishlist.findMany({
         where: {
             userId: user === null || user === void 0 ? void 0 : user.id,
         },
@@ -89,19 +67,19 @@ const getMyCartProduct = (user) => __awaiter(void 0, void 0, void 0, function* (
             user: true,
         },
     });
-    return cartProduct;
+    return WishlistProduct;
 });
-const deleteMyCartProduct = (user, id) => __awaiter(void 0, void 0, void 0, function* () {
-    const cartProduct = yield prisma_1.default.cart.findUnique({
+const deleteMyWishlistProduct = (user, id) => __awaiter(void 0, void 0, void 0, function* () {
+    const WishlistProduct = yield prisma_1.default.wishlist.findUnique({
         where: {
             userId: user === null || user === void 0 ? void 0 : user.id,
             id,
         },
     });
-    if (!cartProduct) {
-        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "Cart product is not found!");
+    if (!WishlistProduct) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "Wishlist product is not found!");
     }
-    const result = yield prisma_1.default.cart.delete({
+    const result = yield prisma_1.default.wishlist.delete({
         where: {
             userId: user === null || user === void 0 ? void 0 : user.id,
             id,
@@ -109,17 +87,17 @@ const deleteMyCartProduct = (user, id) => __awaiter(void 0, void 0, void 0, func
     });
     return result;
 });
-const updateCartProductQuantity = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const cartProduct = yield prisma_1.default.cart.findUnique({
+const updateWishlistProductQuantity = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const WishlistProduct = yield prisma_1.default.wishlist.findUnique({
         where: {
             userId: user === null || user === void 0 ? void 0 : user.id,
             id: payload.productId,
         },
     });
-    if (!cartProduct) {
-        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "Cart product is not found!");
+    if (!WishlistProduct) {
+        throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "Wishlist product is not found!");
     }
-    const result = yield prisma_1.default.cart.update({
+    const result = yield prisma_1.default.wishlist.update({
         where: {
             userId: user === null || user === void 0 ? void 0 : user.id,
             id: payload.productId,
@@ -132,9 +110,9 @@ const updateCartProductQuantity = (user, payload) => __awaiter(void 0, void 0, v
     });
     return result;
 });
-exports.cartService = {
-    addToCart,
-    getMyCartProduct,
-    deleteMyCartProduct,
-    updateCartProductQuantity,
+exports.wishlistService = {
+    addToWishlist,
+    getMyWishlistProduct,
+    deleteMyWishlistProduct,
+    updateWishlistProductQuantity,
 };

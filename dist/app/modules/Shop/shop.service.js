@@ -93,7 +93,6 @@ const getMyShop = (user) => __awaiter(void 0, void 0, void 0, function* () {
             user: true,
         },
     });
-    console.log({ shop });
     if ((shop === null || shop === void 0 ? void 0 : shop.status) === "BLOCKED") {
         throw new AppError_1.AppError(http_status_1.default.FORBIDDEN, "Your shop is been blocked by admin");
     }

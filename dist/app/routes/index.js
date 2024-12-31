@@ -15,6 +15,8 @@ const coupon_route_1 = require("../modules/Coupon/coupon.route");
 const flashSale_route_1 = require("../modules/FlashSale/flashSale.route");
 const profile_route_1 = require("../modules/Profile/profile.route");
 const comparison_route_1 = require("../modules/Comparison/comparison.route");
+const subscriber_route_1 = require("../modules/Subscribers/subscriber.route");
+const wishlist_route_1 = require("../modules/Wishlist/wishlist.route");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -72,6 +74,14 @@ const moduleRoutes = [
     {
         path: "/comparisons",
         route: comparison_route_1.comparisonRoutes,
+    },
+    {
+        path: "/subscriber",
+        route: subscriber_route_1.subscriberRoutes,
+    },
+    {
+        path: "/wishlist",
+        route: wishlist_route_1.wishlistRoutes,
     },
 ];
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
