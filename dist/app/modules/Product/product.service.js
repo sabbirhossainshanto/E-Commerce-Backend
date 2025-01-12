@@ -342,11 +342,38 @@ const deleteSingleProduct = (id) => __awaiter(void 0, void 0, void 0, function* 
     if (!product) {
         throw new AppError_1.AppError(http_status_1.default.NOT_FOUND, "Product is not found");
     }
-    const result = yield prisma_1.default.product.delete({
-        where: {
-            id,
-        },
-    });
+    const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield tx.comparison.deleteMany({
+            where: {
+                productId: id,
+            },
+        });
+        yield tx.cart.deleteMany({
+            where: {
+                productId: id,
+            },
+        });
+        yield tx.wishlist.deleteMany({
+            where: {
+                productId: id,
+            },
+        });
+        yield tx.order.deleteMany({
+            where: {
+                productId: id,
+            },
+        });
+        yield tx.review.deleteMany({
+            where: {
+                productId: id,
+            },
+        });
+        return yield tx.product.delete({
+            where: {
+                id,
+            },
+        });
+    }));
     return result;
 });
 exports.productService = {

@@ -68,6 +68,7 @@ model UserShopFollow {
 model Product {
   id                  String       @id @default(uuid())
   name                String
+  features            String[]     @default([])
   description         String
   isFlashSale         Boolean      @default(false)
   discount_percentage Int?

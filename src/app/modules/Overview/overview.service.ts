@@ -1,5 +1,6 @@
 import { ShopStatus, UserStatus } from "@prisma/client";
 import prisma from "../../helpers/prisma";
+import { IUser } from "../User/user.interface";
 
 const getOverview = async () => {
   const monthNames = [

@@ -393,11 +393,38 @@ const deleteSingleProduct = async (id: string) => {
   if (!product) {
     throw new AppError(httpStatus.NOT_FOUND, "Product is not found");
   }
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.comparison.deleteMany({
+      where: {
+        productId: id,
+      },
+    });
+    await tx.cart.deleteMany({
+      where: {
+        productId: id,
+      },
+    });
+    await tx.wishlist.deleteMany({
+      where: {
+        productId: id,
+      },
+    });
 
-  const result = await prisma.product.delete({
-    where: {
-      id,
-    },
+    await tx.order.deleteMany({
+      where: {
+        productId: id,
+      },
+    });
+    await tx.review.deleteMany({
+      where: {
+        productId: id,
+      },
+    });
+    return await tx.product.delete({
+      where: {
+        id,
+      },
+    });
   });
 
   return result;
