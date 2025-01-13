@@ -14,7 +14,7 @@ const fileUploader_1 = require("../../../utils/fileUploader");
 const parseRequest_1 = __importDefault(require("../../../utils/parseRequest"));
 const router = (0, express_1.Router)();
 router.post("/create-shop", (0, auth_1.default)(client_1.Role.VENDOR), fileUploader_1.fileUploader.upload.single("file"), parseRequest_1.default, (0, validateRequest_1.default)(shop_validation_1.shopValidation.createShop), shop_controller_1.shopController.createShop);
-router.get("/", (0, auth_1.default)(client_1.Role.ADMIN), shop_controller_1.shopController.getAllShop);
+router.get("/", shop_controller_1.shopController.getAllShop);
 router.get("/single-shop/:shopId", shop_controller_1.shopController.getSingleShop);
 router.get("/my-shop", (0, auth_1.default)(client_1.Role.VENDOR), shop_controller_1.shopController.getMyShop);
 router.patch("/my-shop", (0, auth_1.default)(client_1.Role.VENDOR), fileUploader_1.fileUploader.upload.single("file"), parseRequest_1.default, (0, validateRequest_1.default)(shop_validation_1.shopValidation.updateShop), shop_controller_1.shopController.updateMyShop);
